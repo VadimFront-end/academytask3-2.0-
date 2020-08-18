@@ -4,6 +4,7 @@ import './assets/styles/styles.scss'
 import store from './vuex/store'
 import firebase from 'firebase'
 import router from './router/router'
+import 'material-design-icons-iconfont'
 
 Vue.config.productionTip = false
 
@@ -24,7 +25,6 @@ new Vue({
     firebase.initializeApp(firebaseConfig);
 
     firebase.auth().onAuthStateChanged(async (user) => {
-      console.log(user) 
       if(user) {
         await this.$store.dispatch('loggedUser');
         this.$router.push('/list');

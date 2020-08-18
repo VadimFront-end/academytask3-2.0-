@@ -1,6 +1,12 @@
 <template>
-  <div 
-    id="cases-list">
+  <div id="cases-list">
+    <!--переделать-->
+    <modalWin
+      v-show="modalWinIsVisable"
+      @modalWinIsVisableF="modalWinIsVisableF"
+      @click="modalWinIsVisable=!modalWinIsVisable">
+      <center>Создано дело {{LISTS[$store.state.openedList].tasks.length!==0 ? LISTS[$store.state.openedList].tasks[LISTS[$store.state.openedList].tasks.length-1].name : ''}} в списке {{LISTS[$store.state.openedList].list}}</center>
+    </modalWin>
     <router-link :to="'/list'">
       <h3 style="text-align:right">Вернуться к спискам дел &#8617;</h3>
     </router-link>
@@ -18,7 +24,7 @@
     </div>
     <div 
       v-else 
-      class="list-item last">
+      class="list-item-title last">
     <div>Введите название дела:</div>
     <textarea id="create-do" />
     <div class="imprtnt">
@@ -34,17 +40,20 @@
 <script>
 import caseItem from './case.vue'
 import {mapGetters} from 'vuex'
+import modalWin from './modalWindow'
 
 export default {
   name: 'cases-list',
   components: {
-    caseItem
+    caseItem,
+    modalWin
   },
   data() {
     return {
       creating: false,
       important: false,
-      warn: ''
+      warn: '',
+      modalWinIsVisable: false
     }
   },
   methods: {
@@ -76,8 +85,14 @@ export default {
       this.creating=!this.creating;
       this.important=false;
       this.warn='';
-      alert(`Добавили дело ${newDo} в список ${this.LISTS[this.$store.state.openedList].list}`)
+      this.modalWinIsVisable=true;
+        setTimeout(() => {
+          this.modalWinIsVisable=false;
+        }, 1500)
       }
+    },
+    modalWinIsVisableF(data) {
+      this.modalWinIsVisable=data;
     }
   },
   computed: {

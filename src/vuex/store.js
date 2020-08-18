@@ -113,6 +113,11 @@ let store=new Vuex.Store({
         async loggedUser({dispatch}) {
             this.state.userId=await dispatch('getUserId');
             await dispatch('getList');
+        },
+        async changeImport() {
+            await firebase.database().ref(`/users/${this.state.userId}`).set({
+                lists: this.state.lists
+            });
         }
     },
     getters: {

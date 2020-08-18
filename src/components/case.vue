@@ -1,5 +1,6 @@
 <template>
-  <div class="case">
+  <div class="case"
+    @click="isImportant">
     <div class="main-case">
       <div
         v-if="!caseItem.complate" 
@@ -46,6 +47,7 @@ export default {
   methods: {
     isComplate() {
       this.caseItem.complate=!this.caseItem.complate;
+      this.caseItem.important=!this.caseItem.important;
       const a={
         index: this.index,
         complate: this.caseItem.complate
@@ -55,6 +57,10 @@ export default {
     async deleteDo(index) {
       if(confirm(`Точно удалить дело ${this.caseItem.name}?`))
         await this.$store.dispatch('deleteDo',index);
+    },
+    async isImportant() {  
+        this.caseItem.important=!this.caseItem.important;
+        await this.$store.dispatch('changeImport');
     }
   }
 }

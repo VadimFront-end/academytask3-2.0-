@@ -1,17 +1,32 @@
 <template>
-  <div class="list-item">
-    <router-link :to="{name: 'cases'}">
-    <div
-      class="list-title"
-      @click="openList(index)"
-      >{{name}}
-    </div>
-    </router-link>
+  <div class="list-item"
+    @mouseover="lala=i"
+    @mouseout="lala=-1">
     <div 
-      class="cancle"
-      @click="deleteDo(index)"
-      >&#10008;
+      class="list-item-title"
+      :style="bgList">
+      <router-link :to="{name: 'cases'}">
+      <div
+        class="list-title"
+        @click="openList(i)"
+        >{{name}}
+      </div>
+      </router-link>
+      <div 
+        class="cancle"
+        @click="deleteDo(i)"
+        >&#10008;
+      </div>
     </div>
+    <div v-if="lala===i">
+      <div>Дела:</div>
+      <div v-show="!LISTS[lala].tasks.length">В этом списке нет дел!</div> 
+      <div
+        v-for="(caseItem,index) in LISTS[lala].tasks"
+        :key="index"
+        >{{index+1}} - {{caseItem.complate ? '&#10004;': '&#10065;'}} {{caseItem.name}} {{caseItem.important ? '(Важное)': ''}}
+      </div>
+      </div>
   </div>
 </template>
 
@@ -27,12 +42,17 @@ export default {
               return ''
           }
       },
-      index: {
+      i: {
           type: Number,
           default() {
               return 0
           }
       }
+  },
+  data() {
+    return {
+      lala: -1
+    }
   },
   methods: {
     openList(index) {
@@ -45,14 +65,37 @@ export default {
   },
   computed: {
     ...mapGetters([
-        'CASE'
-    ])
+        'CASE',
+        'LISTS'
+    ]),
+    bgList() {
+      for(let j=0;j<this.LISTS[this.i].tasks.length;j++) {
+        if(this.LISTS[this.i].tasks[j].complate) {
+          if(j===this.LISTS[this.i].tasks.length-1) {
+            return {
+              backgroundColor: 'GreenYellow'
+            }
+          }  
+        }
+      }
+      if(this.LISTS[this.i].tasks.length)
+        return {
+          backgroundColor: 'Gold'
+        }
+      else {
+        return {
+          backgroundColor: 'white'
+        }
+      }
+      
+    }
   }
 }
 </script>
 
 <style>
-.list-item {
+.list-item-title {
+  background-color:white;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
