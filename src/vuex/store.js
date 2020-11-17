@@ -25,6 +25,9 @@ let store = new Vuex.Store({
         addDo(state, newDo) {
             state.lists[state.openedList].tasks.push(newDo);
         },
+        editList(state, newName) {
+            state.lists[newName.indexList].list=newName.name;
+        },
         deleteList(state, indexDel) {
             state.lists = state.lists.filter((val, index) => {
                 return index != indexDel;
@@ -74,6 +77,12 @@ let store = new Vuex.Store({
         },
         async addDo({commit}, newDo) {
             commit('addDo', newDo);
+            await firebase.database().ref(`/users/${this.state.userId}`).set({
+                lists: this.state.lists
+            });
+        },
+        async editList({commit}, newName) {
+            commit('editList', newName);
             await firebase.database().ref(`/users/${this.state.userId}`).set({
                 lists: this.state.lists
             });
