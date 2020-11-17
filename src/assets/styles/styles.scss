@@ -1,24 +1,54 @@
+@font-face {
+    font-family: 'Ubuntu';
+    src: url(../fonts/Ubuntu-Light.ttf);
+}
+
 * {
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
+}
+html {
+    font-size: 17px;
 }
 
 body {
-    font-size: 1.75vw;
+    background: #EDF3FF;
+    font-family: 'Ubuntu', sans-serif;
 }
 
-@media (min-width: 1920px) {
-    body {
-        font-size: 40px;
-    }
+input {
+    font-size: 1rem;
+    border: none;
+    font-family: 'Ubuntu', sans-serif;
+}
+input::placeholder {
+    color: #889ABD;
+}
+input:focus,textarea:focus {
+    outline: none;
 }
 
-@media (max-width: 500px) {
-    body {
-        font-size: 5vw;
-    }
+button {
+    font-family: 'Ubuntu', sans-serif;
 }
+
+button:focus {
+    outline: none;
+}
+
 a {
-    color: #000;
-    text-decoration: none
+    text-decoration: none;
+    color: black;
+    display: block;
+    width: 100%;
+}
+
+.error {
+    font-size: 0.7rem;
+    color: #EC1B1B;
+    margin-left: 26px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    visibility: hidden;
 }

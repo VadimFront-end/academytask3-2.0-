@@ -1,38 +1,54 @@
 <template>
   <div id="cases-list">
-    <!--переделать-->
     <modalWin
-      v-show="modalWinIsVisable"
-      @modalWinIsVisableF="modalWinIsVisableF"
-      @click="modalWinIsVisable=!modalWinIsVisable">
-      <center>Создано дело {{LISTS[$store.state.openedList].tasks.length!==0 ? LISTS[$store.state.openedList].tasks[LISTS[$store.state.openedList].tasks.length-1].name : ''}} в списке {{LISTS[$store.state.openedList].list}}</center>
+        v-show="modalWinIsVisable"
+        @modalWinIsVisableF="modalWinIsVisableF"
+        @click="modalWinIsVisable=!modalWinIsVisable">
+      Создано дело {{ CASES.length !== 0 ? CASES[LISTS[$store.state.openedList].tasks.length - 1].name : '' }} в списке
+      {{ LISTS[$store.state.openedList].list }}
     </modalWin>
     <router-link :to="'/list'">
-      <h3 style="text-align:right">Вернуться к спискам дел &#8617;</h3>
+      <h3 style="text-align:right;margin-bottom: 20px">Вернуться к спискам дел &#8617;</h3>
     </router-link>
-    <h2 style="text-align:center">{{LISTS[this.$store.state.openedList].list}}</h2>
-    <caseItem 
-      v-for="(caseItem,index) in CASES"
-      :key="index"
-      :caseItem="caseItem"
-      :index="index" />
+    <h2 style="text-align:center">{{ LISTS[this.$store.state.openedList].list }}</h2>
+    <input
+        class="search"
+        v-model.trim="search"
+        style="display: block"
+        placeholder="Найти задачу"/>
+    <caseItem
+        @edittingStatus="edittingStatus"
+        :indexFocus="indexFocus"
+        :style="{borderRadius: index===0 ? '14px 14px 0 0' : ''}"
+        v-for="(caseItem,index) in CASES"
+        v-show="(!search)||(caseItem.name.toLowerCase().indexOf(search.toLowerCase())!==-1)"
+        :key="index"
+        :caseItem="caseItem"
+        :index="index"/>
     <div
-      v-if="!creating" 
-      class="case"
-      @click="creating=!creating"
+        v-if="!creating"
+        class="list-item"
+        :style="{borderRadius: !CASES.length ? '14px': '0 0 14px 14px'}"
+        @click="creating=!creating"
     >Добавить дело
     </div>
-    <div 
-      v-else 
-      class="list-item-title last">
-    <div>Введите название дела:</div>
-    <textarea id="create-do" />
-    <div class="imprtnt">
-      <div class="question">Пометить как важное?</div>
-      <input type="checkbox" id="checkImportant" @click="important=!important" />
-    </div>
-    <button @click="createNewDo" style="padding:1%">Создать</button>
-    <div v-show="warn" style="color:red">{{warn}}</div>
+    <div
+        v-else
+        class="list-item-add-list"
+        style="height: 150px"
+        :style="{borderRadius: !CASES.length ? '14px': '0 0 14px 14px'}">
+      <div>Введите название дела:</div>
+      <textarea v-model.trim="creatDo" style="resize: none" rows="3" cols="30"/>
+      <div class="imprtnt">
+        <div class="question">Пометить как важное?</div>
+        <input type="checkbox" id="checkImportant" @click="important=!important"/>
+      </div>
+      <button @click="createNewDo" style="padding:1%">Создать</button>
+      <div class="error" :style="{visibility: warn ? 'visible': ''}">
+        <div v-if="!$v.creatDo.required">Введите название</div>
+        <div v-else-if="!$v.creatDo.maxLength">Давай покороче)</div>
+        <div v-else-if="!$v.creatDo.isExists">Такая задача уже есть :(</div>
+      </div>
     </div>
   </div>
 </template>
@@ -41,6 +57,7 @@
 import caseItem from './case.vue'
 import {mapGetters} from 'vuex'
 import modalWin from './modalWindow'
+import {maxLength, required} from "vuelidate/lib/validators";
 
 export default {
   name: 'cases-list',
@@ -52,64 +69,64 @@ export default {
     return {
       creating: false,
       important: false,
-      warn: '',
-      modalWinIsVisable: false
+      warn: false,
+      modalWinIsVisable: false,
+      search: '',
+      creatDo: '',
+      indexFocus: NaN
     }
   },
-  methods: {
-    async createNewDo() {
-      let newDo=document.getElementById('create-do').value;
-      if(newDo) {
-        if(newDo.length>70) {
-          this.warn='Давай покороче)';
-          return;
+  validations: {
+    creatDo: {
+      required,
+      maxLength: maxLength(50),
+      isExists(creatDo) {
+        for (let i = 0; i < this.CASES.length; i++) {
+          if (this.CASES[i].name.toLowerCase() === creatDo.toLowerCase()) return false;
         }
-        if(this.CASES) {
-          for(let i=0;i<this.CASES.length;i++) {
-            if(this.CASES[i].name.toLowerCase()===newDo.toLowerCase()) {
-              this.warn='Такое дело уже есть :(';
-              return;
-            }
-          }
-        } 
-      let now=new Date();
-      let tmp= {
-        name: '',
-        date: now.getHours() + ':' + now.getMinutes() + ' ' + now.getDate() + '.' + (now.getMonth() + 1) + '.' + now.getFullYear() + ' г.',
-        important: false,
-        complate: false
-      };
-      tmp.important=this.important;
-      tmp.name=newDo;
-      this.$store.dispatch('addDo',tmp);
-      this.creating=!this.creating;
-      this.important=false;
-      this.warn='';
-      this.modalWinIsVisable=true;
-        setTimeout(() => {
-          this.modalWinIsVisable=false;
-        }, 1500)
+        return true;
       }
     },
+  },
+  methods: {
+    createNewDo() {
+      if(!this.$v.creatDo.$invalid) {
+        let now = new Date();
+        let tmp = {
+          name: this.creatDo,
+          date: now.getHours() + ':' + now.getMinutes() + ' ' + now.getDate() + '.' + (now.getMonth() + 1),
+          important: this.important,
+          complete: false
+        };
+        this.$store.dispatch('addDo', tmp);
+        this.creating = !this.creating;
+        this.important = false;
+        this.warn = false;
+        this.modalWinIsVisable = true;
+        setTimeout(() => {
+          this.modalWinIsVisable = false;
+        }, 1500)
+        this.creatDo = '';
+      }
+      else this.warn=true;
+    },
     modalWinIsVisableF(data) {
-      this.modalWinIsVisable=data;
+      this.modalWinIsVisable = data;
+    },
+    edittingStatus(data) {
+      this.indexFocus !== data ? this.indexFocus = data : this.indexFocus = NaN;
     }
   },
   computed: {
     ...mapGetters([
-        'CASES',
-        'LISTS'
+      'CASES',
+      'LISTS'
     ])
   }
 }
 </script>
 
 <style>
-#cases-list {
-  max-width: 1500px;
-  padding: 2%;
-  width: 100%;
-}
 
 #checkImportant {
   margin-left: 10px;

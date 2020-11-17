@@ -5,6 +5,8 @@ import store from './vuex/store'
 import firebase from 'firebase'
 import router from './router/router'
 import 'material-design-icons-iconfont'
+import Vuelidate from 'vuelidate'
+Vue.use(Vuelidate)
 
 Vue.config.productionTip = false
 

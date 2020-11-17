@@ -4,7 +4,7 @@ import firebase from 'firebase'
 
 Vue.use(Vuex);
 
-let store=new Vuex.Store({
+let store = new Vuex.Store({
     state: {
         error: null,
         openedList: 0,
@@ -12,106 +12,102 @@ let store=new Vuex.Store({
         userId: null
     },
     mutations: {
-        addList(state,name) {
-            const newList={
+        addList(state, name) {
+            const newList = {
                 list: name,
                 tasks: []
             }
             state.lists.push(newList);
         },
-        changeOpenedList(state,indexList) {
-            state.openedList=indexList;
+        changeOpenedList(state, indexList) {
+            state.openedList = indexList;
         },
-        addDo(state,newDo) {
+        addDo(state, newDo) {
             state.lists[state.openedList].tasks.push(newDo);
         },
-        deleteList(state,indexDel) {
-            state.lists=state.lists.filter((val,index)=> {
-                return index!=indexDel;
+        deleteList(state, indexDel) {
+            state.lists = state.lists.filter((val, index) => {
+                return index != indexDel;
+            })
+            console.log(state.lists)
+        },
+        deleteDo(state, indexDel) {
+            state.lists[state.openedList].tasks = state.lists[state.openedList].tasks.filter((val, index) => {
+                return index != indexDel;
             })
         },
-        deleteDo(state,indexDel) {
-            state.lists[state.openedList].tasks=state.lists[state.openedList].tasks.filter((val,index)=> {
-                return index!=indexDel;
-            })
+        setError(state, error) {
+            state.error = error;
         },
-        setError(state,error) {
-            state.error=error;
-        },
-        isComplate(state,{index,complate}) {
-            state.lists[state.openedList].tasks[index].complate=complate;
+        isComplate(state, newStatus) {
+            state.lists[state.openedList].tasks[newStatus.indexTask].complete = newStatus.status;
         }
     },
     actions: {
-        async registerUser({dispatch},{email,password}) {
-            await firebase.auth().createUserWithEmailAndPassword(email,password);
-            this.state.userId=await dispatch('getUserId');
+        async registerUser({dispatch}, {email, password}) {
+            await firebase.auth().createUserWithEmailAndPassword(email, password);
+            this.state.userId = await dispatch('getUserId');
         },
         async getUserId() {
-            return firebase.auth().currentUser ? firebase.auth().currentUser.uid : null; 
+            return firebase.auth().currentUser ? firebase.auth().currentUser.uid : null;
         },
-        async login({commit,dispatch},{email,password}) {
+        async login({commit, dispatch}, {email, password}) {
             try {
-                await firebase.auth().signInWithEmailAndPassword(email,password);
-                this.state.userId=await dispatch('getUserId');
-            }
-            catch(e) {
+                await firebase.auth().signInWithEmailAndPassword(email, password);
+                this.state.userId = await dispatch('getUserId');
+            } catch (e) {
                 commit('setError', e.code);
                 throw e
             }
         },
         async logout() {
             await firebase.auth().signOut();
-            this.state.userId=null;
-            this.state.lists=[];
-            this.state.openedList=0;
+            this.state.userId = null;
+            this.state.lists = [];
+            this.state.openedList = 0;
         },
-        async addList({commit},newList) {
-            commit('addList',newList);
+        async addList({commit}, newList) {
+            commit('addList', newList);
             await firebase.database().ref(`/users/${this.state.userId}`).set({
                 lists: this.state.lists
             });
         },
-        async addDo({commit},newDo) {
-            commit('addDo',newDo);
+        async addDo({commit}, newDo) {
+            commit('addDo', newDo);
             await firebase.database().ref(`/users/${this.state.userId}`).set({
                 lists: this.state.lists
             });
         },
-        async deleteList({commit},index) {
-            commit('deleteList',index);
+        async deleteList({commit}, index) {
+            commit('deleteList', index);
             await firebase.database().ref(`/users/${this.state.userId}`).set({
                 lists: this.state.lists
             });
         },
-        async deleteDo({commit},index) {
-            commit('deleteDo',index);
+        async deleteDo({commit}, index) {
+            commit('deleteDo', index);
             await firebase.database().ref(`/users/${this.state.userId}`).set({
                 lists: this.state.lists
             });
         },
-        async isComplate({commit},{index,complate}) {
-            const a={
-                index: index,
-                complate: complate
-            }
-            commit('isComplate',a);
+        async isComplete({commit}, newStatus) {
+            commit('isComplate', newStatus);
             await firebase.database().ref(`/users/${this.state.userId}`).set({
                 lists: this.state.lists
             });
         },
         async getList() {
-            let lists=await firebase.database().ref(`/users/${this.state.userId}/lists`).once('value');
-            lists=lists.val();
-            for(let list in lists) {
-                if(!lists[list].tasks) {
-                    lists[list].tasks=[];
-                } 
+            let lists = await firebase.database().ref(`/users/${this.state.userId}/lists`).once('value');
+            lists = lists.val();
+            for (let list in lists) {
+                if (!lists[list].tasks) {
+                    lists[list].tasks = [];
+                }
                 this.state.lists.push(lists[list]);
             }
         },
         async loggedUser({dispatch}) {
-            this.state.userId=await dispatch('getUserId');
+            this.state.userId = await dispatch('getUserId');
             await dispatch('getList');
         },
         async changeImport() {
